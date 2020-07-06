@@ -784,27 +784,53 @@ static function array<SoldierSpecialization> GetSpecializationsAvailableToSoldie
 {
 	local array<SoldierSpecialization> AllSpecs, SpecsAvailableToSoldier;
 	local SoldierSpecialization Spec;
-	local X2UniversalSoldierClassInfo UniversalSoldierClassTemplate;
 
 	AllSpecs = GetSpecializations();
 
 	foreach AllSpecs(Spec)
 	{
-		UniversalSoldierClassTemplate = GetSpecializationTemplateByName(Spec.TemplateName);
-		if (UniversalSoldierClassTemplate.RequiredAbilities.Length > 0)
-		{
-			if (class'RPGO_Helper'.static.HasAnyOfTheAbilitiesFromAnySource(UnitState, UniversalSoldierClassTemplate.RequiredAbilities))
-			{
-				SpecsAvailableToSoldier.AddItem(Spec);
-			}
-		}
-		else
+		if(IsSpecializationAvailableToSoldier(Spec, UnitState))
 		{
 			SpecsAvailableToSoldier.AddItem(Spec);
 		}
 	}
 
 	return SpecsAvailableToSoldier;
+}
+
+static function bool IsSpecializationAvailableToSoldier(SoldierSpecialization Spec, XComGameState_Unit UnitState)
+{
+	local XComLWTuple OverrideTuple;
+	local X2UniversalSoldierClassInfo UniversalSoldierClassTemplate;
+
+	OverrideTuple = new class'XComLWTuple';
+	OverrideTuple.Id = 'RPGOIsSpecAvailable';
+	OverrideTuple.Data.Add(3);
+
+	// boolean to return
+	OverrideTuple.Data[0].kind = XComLWTVBool;
+
+	UniversalSoldierClassTemplate = GetSpecializationTemplateByName(Spec.TemplateName);
+	if (UniversalSoldierClassTemplate.RequiredAbilities.Length > 0)
+	{
+		OverrideTuple.Data[0].b = class'RPGO_Helper'.static.HasAnyOfTheAbilitiesFromAnySource(UnitState, UniversalSoldierClassTemplate.RequiredAbilities);
+	}
+	else
+	{
+		OverrideTuple.Data[0].b = true;
+	}
+
+	// The specialization to be validated
+	OverrideTuple.Data[1].kind = XComLWTVName;
+	OverrideTuple.Data[1].n = Spec.TemplateName;
+
+	// The soldier's unit state
+	OverrideTuple.Data[2].kind = XComLWTVObject;
+	OverrideTuple.Data[2].o = UnitState;
+
+	`XEVENTMGR.TriggerEvent('RPGOIsSpecAvailable', OverrideTuple);
+
+	return OverrideTuple.Data[0].b;
 }
 
 function int SortSpecializations(SoldierSpecialization A, SoldierSpecialization B)
