@@ -732,7 +732,7 @@ function bool MeetsAbilityPrerequisites(XComGameState_Unit UnitState, name Abili
 	bMeetsAbilityPrerequisites = UnitState.MeetsAbilityPrerequisites(AbilityName);
 
 	// Dont use RPGO AbilityPrerequisites for other classes
-	if (!bMeetsAbilityPrerequisites && UnitState.GetSoldierClassTemplateName() != 'UniversalSoldier')
+	if (!bMeetsAbilityPrerequisites && !class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 	{
 		if (class'X2TemplateHelper_RPGOverhaul'.static.IsPrerequisiteAbility(AbilityName))
 		{
@@ -864,7 +864,7 @@ function PreviewAbility(int Rank, int Branch)
 				APLabel = "";
 			}
 			// Musashi ignore ability prerquisites for other classes
-			else if (AbilityTemplate.PrerequisiteAbilities.Length > 0 && Unit.GetSoldierClassTemplateName() == 'UniversalSoldier')
+			else if (AbilityTemplate.PrerequisiteAbilities.Length > 0 && class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(Unit.GetSoldierClassTemplateName()))
 			{
 				// Look back to the previous rank and check to see if that ability is a prereq for this one
 				// If so, display a message warning the player that there is a prereq

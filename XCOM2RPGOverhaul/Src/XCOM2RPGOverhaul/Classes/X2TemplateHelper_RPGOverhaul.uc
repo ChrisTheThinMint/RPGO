@@ -1231,7 +1231,7 @@ static function bool CanAddItemToInventory_WeaponRestrictions(out int bCanAddIte
 	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitState.ObjectID));
 
 	//	Perform the check ONLY if the item has not been forbidden by another mod already, if the soldier is an RPGO soldier, and only if we're looking at a weapon.
-	if (DisabledReason == "" && UnitState.GetSoldierClassTemplateName() == 'UniversalSoldier' && WeaponTemplate != none)
+	if (DisabledReason == "" && class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()) && WeaponTemplate != none)
 	{
 		//`LOG("Begin check for unit:" @ UnitState.GetFullName() @ "slot:" @ Slot @ "weapon:" @ WeaponTemplate.DataName,, 'IRITEST');
 

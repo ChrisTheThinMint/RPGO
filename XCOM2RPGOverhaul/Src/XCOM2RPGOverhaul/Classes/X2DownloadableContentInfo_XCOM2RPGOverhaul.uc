@@ -39,7 +39,7 @@ static function PatchModClassOverrides()
 
 static event OnPostTemplatesCreated()
 {
-	class'X2SoldierClassTemplatePlugin'.static.SetupSpecialization('UniversalSoldier');
+	class'X2SoldierClassTemplatePlugin'.static.SetupSpecializations();
 	class'X2TemplateHelper_RPGOverhaul'.static.AddSecondWaveOptions();
 	class'X2TemplateHelper_RPGOverhaul'.static.RemoveJediClassSoldierInfoEventistenerTemplate();
 	class'X2TemplateHelper_RPGOverhaul'.static.PatchAcademyUnlocks('UniversalSoldier');

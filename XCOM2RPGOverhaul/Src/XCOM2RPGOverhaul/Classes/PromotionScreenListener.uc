@@ -11,6 +11,7 @@ event OnInit(UIScreen Screen)
 	local StateObjectReference UnitBeingPromoted;
 	local UIAfterAction AfterActionUI;
 	local Name ClassName;
+	local XComGameState_Unit UnitState;
 
 	//Don't block the tutorial
 	if(!class'XComGameState_HeadquartersXCom'.static.IsObjectiveCompleted('T0_M2_WelcomeToArmory') )
@@ -23,8 +24,10 @@ event OnInit(UIScreen Screen)
 		return;
 	}
 	
-	foreach IgnoreClassNames(ClassName) { // Specific classes to ignore here so that we can do UIArmory_Promotion without ORs later
-		if (Screen.IsA(ClassName))
+	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitBeingPromoted.ObjectID));
+
+	foreach IgnoreClassNames(ClassName) { // Ignore specific screens unless the soldier being promoted uses RPGO specializations
+		if (Screen.IsA(ClassName) && !class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 		    return;
 	}
 	

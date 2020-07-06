@@ -109,7 +109,7 @@ static function AddAdditionalSquaddieAbilities(
 
 	ClassTemplate = UnitState.GetSoldierClassTemplate();
 
-	if(ClassTemplate != none && ClassTemplate.DataName == 'UniversalSoldier')
+	if(static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 	{
 		SpecTemplates = GetAssignedSpecializationTemplates(UnitState);
 		foreach SpecTemplates(SpecTemplate)
@@ -662,7 +662,7 @@ static function array<SoldierSpecialization> GetComplementarySpecializations(XCo
 	return ComplementarySpecs;
 }
 // adds all specializations to the universal soldier class template
-static function SetupSpecialization(name SoldierClassTemplate)
+static function SetupSpecializations()
 {
 	local X2SoldierClassTemplateManager Manager;
 	local X2SoldierClassTemplate Template;
@@ -670,41 +670,48 @@ static function SetupSpecialization(name SoldierClassTemplate)
 	local SoldierClassAbilityType RandomAbility;
 	local name TemplateName;
 	local int Index;
+	local array<X2SoldierClassTemplate> arrClassTemplates;
 
 	Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
-	Template = Manager.FindSoldierClassTemplate(SoldierClassTemplate);
+	arrClassTemplates = Manager.GetAllSoldierClassTemplates(true);
 
-	Template.AbilityTreeTitles.Length = 0;
-	class'X2SoldierClassTemplatePlugin'.static.ResetDummySlot(Template);
-
-	class'X2TemplateHelper_RPGOverhaul'.default.Specializations = GetSpecializations();
-
-	for (Index = 0; Index < class'X2TemplateHelper_RPGOverhaul'.default.Specializations.Length; Index++)
+	foreach arrClassTemplates(Template)
 	{
-		TemplateName = class'X2TemplateHelper_RPGOverhaul'.default.Specializations[Index].TemplateName;
-		UniversalSoldierClassTemplate = GetSpecializationTemplate(class'X2TemplateHelper_RPGOverhaul'.default.Specializations[Index]);
+		if(DoesClassUseSpecializationSystem(Template.DataName))
+		{
+			Template.AbilityTreeTitles.Length = 0;
+			class'X2SoldierClassTemplatePlugin'.static.ResetDummySlot(Template);
 
-		`LOG("Specialization" @ Index @ TemplateName @
-			class'X2TemplateHelper_RPGOverhaul'.default.Specializations[Index].bEnabled @
-			UniversalSoldierClassTemplate.GetClassSpecializationTitleWithMetaData()
-		,, 'RPG');
+			class'X2TemplateHelper_RPGOverhaul'.default.Specializations = GetSpecializations();
+
+			for (Index = 0; Index < class'X2TemplateHelper_RPGOverhaul'.default.Specializations.Length; Index++)
+			{
+				TemplateName = class'X2TemplateHelper_RPGOverhaul'.default.Specializations[Index].TemplateName;
+				UniversalSoldierClassTemplate = GetSpecializationTemplate(class'X2TemplateHelper_RPGOverhaul'.default.Specializations[Index]);
+
+				`LOG("Specialization" @ Index @ TemplateName @
+					class'X2TemplateHelper_RPGOverhaul'.default.Specializations[Index].bEnabled @
+					UniversalSoldierClassTemplate.GetClassSpecializationTitleWithMetaData()
+				,, 'RPG');
 		
-		AddAbilityRanks(UniversalSoldierClassTemplate.ClassSpecializationTitle, UniversalSoldierClassTemplate.AbilitySlots);
+				AddAbilityRanks(UniversalSoldierClassTemplate.ClassSpecializationTitle, UniversalSoldierClassTemplate.AbilitySlots);
 
-		foreach UniversalSoldierClassTemplate.AdditionalRandomTraits(RandomAbility)
-		{
-			Template.RandomAbilityDecks[Template.RandomAbilityDecks.Find('DeckName', 'TraitsXComAbilities')].Abilities.AddItem(RandomAbility);
-			`LOG("Specialization" @ UniversalSoldierClassTemplate.GetClassSpecializationTitleWithMetaData() @
-				"adding" @ RandomAbility.AbilityName @ "to" @ Template.RandomAbilityDecks[Template.RandomAbilityDecks.Find('DeckName', 'TraitsXComAbilities')].DeckName
-			,, 'RPG');
-		}
+				foreach UniversalSoldierClassTemplate.AdditionalRandomTraits(RandomAbility)
+				{
+					Template.RandomAbilityDecks[Template.RandomAbilityDecks.Find('DeckName', 'TraitsXComAbilities')].Abilities.AddItem(RandomAbility);
+					`LOG("Specialization" @ UniversalSoldierClassTemplate.GetClassSpecializationTitleWithMetaData() @
+						"adding" @ RandomAbility.AbilityName @ "to" @ Template.RandomAbilityDecks[Template.RandomAbilityDecks.Find('DeckName', 'TraitsXComAbilities')].DeckName
+					,, 'RPG');
+				}
 
-		foreach UniversalSoldierClassTemplate.AdditionalRandomAptitudes(RandomAbility)
-		{
-			Template.RandomAbilityDecks[Template.RandomAbilityDecks.Find('DeckName', 'InnateAptitudesDeck')].Abilities.AddItem(RandomAbility);
-			`LOG("Specialization" @ UniversalSoldierClassTemplate.GetClassSpecializationTitleWithMetaData() @
-				"adding" @ RandomAbility.AbilityName @ "to" @ Template.RandomAbilityDecks[Template.RandomAbilityDecks.Find('DeckName', 'InnateAptitudesDeck')].DeckName
-			,, 'RPG');
+				foreach UniversalSoldierClassTemplate.AdditionalRandomAptitudes(RandomAbility)
+				{
+					Template.RandomAbilityDecks[Template.RandomAbilityDecks.Find('DeckName', 'InnateAptitudesDeck')].Abilities.AddItem(RandomAbility);
+					`LOG("Specialization" @ UniversalSoldierClassTemplate.GetClassSpecializationTitleWithMetaData() @
+						"adding" @ RandomAbility.AbilityName @ "to" @ Template.RandomAbilityDecks[Template.RandomAbilityDecks.Find('DeckName', 'InnateAptitudesDeck')].DeckName
+					,, 'RPG');
+				}
+			}
 		}
 	}
 }
@@ -865,7 +872,7 @@ static function string GetAbilityTreeTitle(XComGameState_Unit UnitState, int Slo
 {
 	local X2UniversalSoldierClassInfo Template;
 
-	if (UnitState.GetSoldierClassTemplateName() != 'UniversalSoldier')
+	if (!static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 	{
 		return UnitState.GetSoldierClassTemplate().AbilityTreeTitles[SlotIndex];
 	}
@@ -1311,4 +1318,32 @@ static function DeleteSpecialization(X2SoldierClassTemplate Template, name Speci
 	}
 
 	Template.AbilityTreeTitles.RemoveItem(string(SpecializationName));
+}
+
+static function bool DoesClassUseSpecializationSystem(name ClassTemplateName)
+{
+	local XComLWTuple OverrideTuple;
+
+	if(ClassTemplateName == 'UniversalSoldier')
+	{
+		return true;
+	}
+	else
+	{
+		OverrideTuple = new class'XComLWTuple';
+		OverrideTuple.Id = 'RPGODoesClassUseSpecSystem';
+		OverrideTuple.Data.Add(2);
+
+		// boolean to return
+		OverrideTuple.Data[0].kind = XComLWTVBool;
+		OverrideTuple.Data[0].b = false;
+
+		// The soldier's unit state
+		OverrideTuple.Data[1].kind = XComLWTVName;
+		OverrideTuple.Data[1].n = ClassTemplateName;
+
+		`XEVENTMGR.TriggerEvent('RPGODoesClassUseSpecSystem', OverrideTuple);
+
+		return OverrideTuple.Data[0].b;
+	}
 }

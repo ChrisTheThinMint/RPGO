@@ -7,7 +7,7 @@ static function bool ShowChooseSpecScreen(XComGameState_Unit UnitState)
 	UnitState.GetUnitValue('SecondWaveCommandersChoiceAbilityChosen', AbilityChosen);
 	UnitState.GetUnitValue('SecondWaveCommandersChoiceSpecChosen', SpecChosen);
 
-	return UnitState.GetSoldierClassTemplateName() == 'UniversalSoldier' &&
+	return class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()) &&
 		`SecondWaveEnabled('RPGOCommandersChoice') &&
 		SpecChosen.fValue != 1 &&
 		!ShowChooseAbilityScreen(UnitState);
@@ -20,7 +20,7 @@ static function bool ShowChooseAbilityScreen(XComGameState_Unit UnitState)
 	UnitState.GetUnitValue('SecondWaveCommandersChoiceAbilityChosen', AbilityChosen);
 	UnitState.GetUnitValue('SecondWaveCommandersChoiceSpecChosen', SpecChosen);
 
-	return UnitState.GetSoldierClassTemplateName() == 'UniversalSoldier' &&
+	return class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()) &&
 		`SecondWaveEnabled('RPGOOrigins') &&
 		AbilityChosen.fValue != 1 &&
 		(class'X2SecondWaveConfigOptions'.static.GetOriginsAbiltiesCount() +
@@ -117,7 +117,7 @@ static function AddStartingAbilities(
 
 	ClassTemplate = UnitState.GetSoldierClassTemplate();
 
-	if(ClassTemplate != none && ClassTemplate.DataName == 'UniversalSoldier')
+	if(ClassTemplate != none && class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 	{
 		UnitState.AbilityTree[0].Abilities.Length = 0;
 		UnitState.ResetSoldierAbilities();
@@ -565,7 +565,7 @@ static function BuildSpecAbilityTree(
 
 	ClassTemplate = UnitState.GetSoldierClassTemplate();
 
-	if(ClassTemplate != none && ClassTemplate.DataName == 'UniversalSoldier')
+	if(ClassTemplate != none && class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 	{
 		// Reset everything above squaddie
 		if (bResetAbilityTree)

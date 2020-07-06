@@ -136,7 +136,7 @@ static function EventListenerReturn AddAdditionialSquaddieAbilities(Object Event
 
 	UnitState = XComGameState_Unit(EventData);
 	
-	if (UnitState != none && UnitState.GetSoldierClassTemplateName() == 'UniversalSoldier')
+	if (UnitState != none && class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 	{
 		`LOG(default.class @ GetFuncName() @ "to" @ UnitState.SummaryString(),, 'RPGO-Promotion');
 
@@ -177,7 +177,7 @@ static function EventListenerReturn AssignSoldierSpecializations(Object EventDat
 
 	if (UnitState != none)
 	{
-		if (UnitState.GetSoldierClassTemplateName() == 'UniversalSoldier')
+		if (class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 		{
 			`LOG(default.class @ GetFuncName() @ UnitState.SummaryString() @
 				GameState @ GameState.GetNumGameStateObjects() @
@@ -230,8 +230,7 @@ static function EventListenerReturn OnCompleteRespecSoldierSecondWave(Object Eve
 		// Refresh UnitState
 		UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitState.ObjectID));
 
-		if (UnitState.GetMyTemplateName() == 'Soldier' &&
-			UnitState.GetSoldierClassTemplateName() == 'UniversalSoldier')
+		if (class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 		{
 			UnitState.GetUnitValue('RPGO_RebuildSelectedSoldierPreserveSpecs', PreserveSpecs);
 			UnitState.GetUnitValue('RPGO_RebuildSelectedSoldierPreserveAbilities', PreserveAbilities);
@@ -625,7 +624,7 @@ static function EventListenerReturn OnBestGearLoadoutApplied_Listener(Object Eve
 		foreach XComHQ.Crew(UnitRef)
 		{
 			UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UnitRef.ObjectID));
-			if (UnitState != none && UnitState.GetSoldierClassTemplateName() == 'UniversalSoldier' && UnitState.IsSoldier() && UnitState.IsAlive())
+			if (UnitState != none && class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 			{
 				//`LOG("OnBestGearLoadoutApplied for " @ UnitState.GetFullName(),, 'RPG');
 				PrimaryWeaponState = UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon);
@@ -695,7 +694,7 @@ static function EventListenerReturn RandomClasses_PromotionEventListener(Object 
 	{
 		//	Proceed only if this is a newly promoted RPGO soldier to the rank of squaddie, where they first receive their specializations. 
 		//	Proceed only if both Weapon Restrictions and Random Classes SWOs are enabled. 
-		if (UnitState != none && UnitState.GetSoldierClassTemplateName() == 'UniversalSoldier')
+		if (UnitState != none && class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
 		{
 			//`LOG("Weapon Restrictions: equipping new weapons on soldier:" @ UnitState.GetFullname() @ getfuncname(),, 'RPG');
 			WeaponRestrictions_EquipNewWeaponsOnSoldier(UnitState.ObjectID);
