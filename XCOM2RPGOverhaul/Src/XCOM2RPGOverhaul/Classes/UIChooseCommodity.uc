@@ -328,7 +328,8 @@ simulated function bool IsOwnedSpec(int Index)
 
 simulated function bool HasReachedSpecLimit()
 {
-	return CommoditiesChosen.Length - OwnedItems.Length >= MaxChooseItem;
+	//Allow the player to continue if they have chosen the max number of abilities/specs, or as many as they can if there aren't enough available
+	return (CommoditiesChosen.Length - OwnedItems.Length >= MaxChooseItem || (CommodityPool.Length < MaxChooseItem && CommoditiesChosen.Length == CommodityPool.Length));
 }
 
 simulated function int GetItemIndex(Commodity Item)
