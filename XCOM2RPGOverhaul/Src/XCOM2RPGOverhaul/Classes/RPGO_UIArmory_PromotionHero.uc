@@ -700,41 +700,49 @@ function bool CanPurchaseAbility(int Rank, int Branch, name AbilityName)
 	UnitState = GetUnit();
 	AbilityRanks = GetAbilitiesPerRank(UnitState);
 
-	//Emulate Resistance Hero behaviour
-	if(AbilityRanks == 0)
-	{				
-		return (Rank < UnitState.GetRank() && CanAffordAbility(Rank, Branch) && MeetsAbilityPrerequisites(UnitState, AbilityName));
+	//Classes that use the RPGO specialization system can purchase abilities freely, and consider all prerequisites
+	if(class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
+	{
+		return (Rank < UnitState.GetRank() &&
+			CanAffordAbility(Rank, Branch) &&
+			MeetsAbilityPrerequisites(UnitState, AbilityName, true));
 	}
 
-	//Don't allow non hero units to purchase abilities with AP without a training center
-	if(UnitState.HasPurchasedPerkAtRank(Rank) && !UnitState.IsResistanceHero() && !CanSpendAP())
+	//Vanilla resistance heroes can also purchase all abilities, but ignore RPGO prerequisite trees
+	if(UnitState.IsResistanceHero())
+	{
+		return (Rank < UnitState.GetRank() &&
+			CanAffordAbility(Rank, Branch) &&
+			MeetsAbilityPrerequisites(UnitState, AbilityName, false));
+	}
+
+	//Other vanilla-style soldiers must purchase non-XCOM perks first, and have to be able to spend AP for extra perks
+	//This case is rare with RPGO removing all classes, but should still be reserved
+	if(UnitState.HasPurchasedPerkAtRank(Rank))
+	{
+		return CanSpendAP();
+	}
+
+	if(Branch >= AbilityRanks) //Perk is in the XCOM row
 	{
 		return false;
 	}
-		
-	//Don't allow non hero units to purchase abilities on the xcom perk row before getting a rankup perk
-	if(!UnitState.HasPurchasedPerkAtRank(Rank) && !UnitState.IsResistanceHero() && Branch >= AbilityRanks )
-	{
-		return false;
-	}
 
-	//Normal behaviour
-	// Musashi 11-05-17 do not check ability prerequisites for other classes than UniversalSoldier
 	return (Rank < UnitState.GetRank() &&
 		CanAffordAbility(Rank, Branch) &&
-		MeetsAbilityPrerequisites(UnitState, AbilityName));
+		MeetsAbilityPrerequisites(UnitState, AbilityName, false));
 }
 
-function bool MeetsAbilityPrerequisites(XComGameState_Unit UnitState, name AbilityName)
+function bool MeetsAbilityPrerequisites(XComGameState_Unit UnitState, name AbilityName, bool ConsiderRPGOPrerequisites)
 {
 	local bool bMeetsAbilityPrerequisites;
 
 	bMeetsAbilityPrerequisites = UnitState.MeetsAbilityPrerequisites(AbilityName);
 
 	// Dont use RPGO AbilityPrerequisites for other classes
-	if (!bMeetsAbilityPrerequisites && !class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(UnitState.GetSoldierClassTemplateName()))
+	if (!bMeetsAbilityPrerequisites)
 	{
-		if (class'X2TemplateHelper_RPGOverhaul'.static.IsPrerequisiteAbility(AbilityName))
+		if (class'X2TemplateHelper_RPGOverhaul'.static.IsPrerequisiteAbility(AbilityName) && !ConsiderRPGOPrerequisites)
 		{
 			return true;
 		}
@@ -777,7 +785,7 @@ function int GetAbilityPointCost(int Rank, int Branch)
 
 	if (!UnitState.IsResistanceHero() && AbilityRanks != 0)
 	{
-		if (!UnitState.HasPurchasedPerkAtRank(Rank) && Branch < AbilityRanks && default.NoFreeAbilityOnRankUpClasses.Find(ClassName) == INDEX_NONE)
+		if (!UnitState.HasPurchasedPerkAtRank(Rank) && Branch < AbilityRanks && FreeAbilityOnRankUp(ClassName))
 		{
 			// If this is a base game soldier with a promotion available, ability costs nothing since it would be their
 			// free promotion ability if they "bought" it through the Armory
@@ -804,6 +812,19 @@ function int GetAbilityPointCost(int Rank, int Branch)
 	}
 	
 	return AbilityCost;
+}
+
+function bool FreeAbilityOnRankUp(name ClassName)
+{
+	if(class'X2SoldierClassTemplatePlugin'.static.DoesClassUseSpecializationSystem(ClassName))
+	{
+		return false;
+	}
+	if(default.NoFreeAbilityOnRankUpClasses.Find(ClassName) == INDEX_NONE)
+	{
+		return false;
+	}
+	return true;
 }
 
 function PreviewAbility(int Rank, int Branch)
