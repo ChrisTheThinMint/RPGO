@@ -844,17 +844,21 @@ static function X2AbilityTemplate SurgicalPrecision()
 {
 	local X2AbilityTemplate						Template;
 	local XMBEffect_ConditionalBonus			Effect;
+	local float									CoverMult;
+
+	//Config value is 0-100 by default for the purposes of localization
+	CoverMult = class'RPGOAbilityConfigManager'.static.GetConfigFloatValue("SURGICAL_PRECISION_BONUS_PERC") / 100;
 
 	Effect = new class'XMBEffect_ConditionalBonus';
 	Effect.AbilityTargetConditions.AddItem(default.FullCoverCondition);
-	Effect.AddToHitModifier(class'X2AbilityToHitCalc_StandardAim'.default.HIGH_COVER_BONUS / 2);
+	Effect.AddToHitModifier(class'X2AbilityToHitCalc_StandardAim'.default.HIGH_COVER_BONUS * CoverMult);
 
 	Template = Passive('SurgicalPrecision', "img:///Texture2D'UILibrary_RPGO.UIPerk_SurgicalPrecision'", true, Effect);
 	
 	Effect = new class'XMBEffect_ConditionalBonus';
 	Effect.AbilityTargetConditions.AddItem(default.HalfCoverCondition);
 	Effect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocHelpText, Template.IconImage, false,, Template.AbilitySourceName);
-	Effect.AddToHitModifier(class'X2AbilityToHitCalc_StandardAim'.default.LOW_COVER_BONUS / 2);
+	Effect.AddToHitModifier(class'X2AbilityToHitCalc_StandardAim'.default.LOW_COVER_BONUS * CoverMult);
 	Template.AddTargetEffect(Effect);
 
 	return Template;
